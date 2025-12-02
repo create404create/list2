@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>US Number DNC Checker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container py-4">
+        <!-- Header -->
+        <header class="text-center mb-5">
+            <h1 class="display-4 text-primary">
+                <i class="fas fa-phone-alt me-2"></i>US Number DNC Checker
+            </h1>
+            <p class="lead text-muted">Check multiple US numbers for DNC status automatically</p>
+        </header>
+
+        <!-- Input Section -->
+        <div class="card shadow-lg mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-edit me-2"></i>Enter Phone Numbers</h4>
+            </div>
+            <div class="card-body">
+                <div class="form-group mb-3">
+                    <label for="phoneList" class="form-label fw-bold">Numbers (one per line):</label>
+                    <textarea class="form-control font-monospace" id="phoneList" rows="8" 
+                              placeholder="Example format:
++12345678901
++12345678902
++12345678903"></textarea>
+                    <div class="form-text">Enter US numbers in international format starting with +1</div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <button id="checkBtn" class="btn btn-success btn-lg w-100">
+                            <i class="fas fa-play-circle me-2"></i>Start Checking
+                        </button>
+                    </div>
+                    <div class="col-md-6">
+                        <button id="sampleBtn" class="btn btn-info btn-lg w-100">
+                            <i class="fas fa-vial me-2"></i>Load Sample Numbers
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div id="progressContainer" class="mt-4" style="display: none;">
+                    <div class="progress" style="height: 30px;">
+                        <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" 
+                             role="progressbar" style="width: 0%">0%</div>
+                    </div>
+                    <div class="text-center mt-2">
+                        <span id="progressText" class="fw-bold">
+                            <i class="fas fa-sync-alt fa-spin me-2"></i>Initializing...
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="row g-4">
+            <!-- Clean Numbers -->
+            <div class="col-lg-4">
+                <div class="card h-100 border-success shadow">
+                    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-check-circle me-2"></i>Clean Numbers
+                        </h5>
+                        <span id="cleanCount" class="badge bg-light text-dark fs-6">0</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="cleanNumbers" class="number-list"></div>
+                    </div>
+                    <div class="card-footer">
+                        <button class="btn btn-outline-success w-100" onclick="exportData('clean')">
+                            <i class="fas fa-download me-2"></i>Export Clean
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DNC Numbers -->
+            <div class="col-lg-4">
+                <div class="card h-100 border-warning shadow">
+                    <div class="card-header bg-warning text-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-exclamation-triangle me-2"></i>DNC Numbers
+                        </h5>
+                        <span id="dncCount" class="badge bg-light text-dark fs-6">0</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="dncNumbers" class="number-list"></div>
+                    </div>
+                    <div class="card-footer">
+                        <button class="btn btn-outline-warning w-100" onclick="exportData('dnc')">
+                            <i class="fas fa-download me-2"></i>Export DNC
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Invalid Numbers -->
+            <div class="col-lg-4">
+                <div class="card h-100 border-danger shadow">
+                    <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-times-circle me-2"></i>Invalid Numbers
+                        </h5>
+                        <span id="invalidCount" class="badge bg-light text-dark fs-6">0</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="invalidNumbers" class="number-list"></div>
+                    </div>
+                    <div class="card-footer">
+                        <button class="btn btn-outline-danger w-100" onclick="exportData('invalid')">
+                            <i class="fas fa-download me-2"></i>Export Invalid
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Control Buttons -->
+        <div class="row mt-4 g-3">
+            <div class="col-md-4">
+                <button id="resetBtn" class="btn btn-secondary btn-lg w-100">
+                    <i class="fas fa-redo me-2"></i>Reset All
+                </button>
+            </div>
+            <div class="col-md-4">
+                <button id="copyBtn" class="btn btn-info btn-lg w-100">
+                    <i class="fas fa-copy me-2"></i>Copy All Results
+                </button>
+            </div>
+            <div class="col-md-4">
+                <button id="statsBtn" class="btn btn-dark btn-lg w-100" data-bs-toggle="modal" data-bs-target="#statsModal">
+                    <i class="fas fa-chart-bar me-2"></i>View Stats
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats Modal -->
+        <div class="modal fade" id="statsModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Statistics</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <h2 id="totalNumbers">0</h2>
+                                <p class="text-muted">Total</p>
+                            </div>
+                            <div class="col-4">
+                                <h2 id="cleanPercent">0%</h2>
+                                <p class="text-muted">Clean Rate</p>
+                            </div>
+                            <div class="col-4">
+                                <h2 id="timeTaken">0s</h2>
+                                <p class="text-muted">Time</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="mt-5 text-center text-muted">
+            <p>DNC Checker Tool • Version 1.0</p>
+        </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
